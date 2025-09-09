@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Globe with Countries</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #globeViz { width: 100vw; height: 100vh; }
+  </style>
+  <link rel="stylesheet" href="UI.css">
+</head>
+<body>
+    <nav class="glass">
+        <p>
+            Home
+        </p>
+        <span>
+            |
+        </span>
+        <p>
+            About
+        </p>
+        <span>
+            |
+        </span>
+        <p>
+            Contact
+        </p>
+    </nav>
+  <div id="globeViz"></div>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/three"></script>
+  <script src="https://unpkg.com/globe.gl"></script>
+
+  <script>
+    const globe = Globe()
+      (document.getElementById('globeViz'))
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+      .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png');
+
+    // Grab controls and customize for "mouse drag only"
+    const controls = globe.controls();
+    controls.enableZoom = true; // disable scroll zoom
+    // Set minimum and maximum zoom distance
+controls.minDistance = 200;  // closest you can get
+controls.maxDistance = 400;  // farthest you can go
+
+// Optional: zoom speed
+controls.zoomSpeed = 1.0;
+
+
+
+
+    // Load world countries GeoJSON
+    fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
+      .then(res => res.json())
+      .then(countries => {
+        globe
+          .polygonsData(countries.features)
+          .polygonCapColor(() => 'rgba(0, 200, 150, 0.4)')   // country fill color
+          .polygonSideColor(() => 'rgba(0, 100, 100, 0.2)')  // border shade
+          .polygonStrokeColor(() => '#111')                  // outline
+          .onPolygonClick(d => {
+            alert(`Clicked country: ${d.properties.name}`); // show country name
+            
+          });
+      });
+  </script>
+</body>
+</html>
