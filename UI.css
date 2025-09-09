@@ -1,0 +1,66 @@
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;                      /* Flexbox */
+      align-items: center;                /* Vertical center */
+      justify-content: center;            /* Horizontal center */
+      /* background: url('https://picsum.photos/1200/800?blur') no-repeat center/cover; */
+      font-family: system-ui, sans-serif;
+    }
+/* Glassmorphism card */
+        .glass {
+            /* top: 20px; */
+            cursor: pointer;
+            position:absolute;
+            z-index: 3;
+        display: flex;                      /* Flexbox inside card */
+        /* flex-direction: column;             Stack content vertically */
+        align-items: center;   
+        gap: 40px;             /* Center horizontally */
+        justify-content: center;            /* Center vertically if needed */
+        width: 320px;
+        padding: 14px 20px;
+        border-radius: 20px;
+
+        /* Glass effect */
+        background: rgba(240, 240, 240, 0.178);         /* translucent */
+        border: 1px solid rgba(255, 255, 255, 0.297);    /* subtle border */
+        backdrop-filter: blur(5px) saturate(180%);
+        -webkit-backdrop-filter: blur(12px) saturate(180%);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+
+        color: #fff;
+        text-align: center;
+
+        transition: scale 0.3s ease-in-out ;
+
+        animation: pop-up 1s ease-in-out forwards 0.7s;
+
+
+
+    
+        }
+
+        
+@keyframes pop-up {
+    to{
+       transform: translateY(-41vh); 
+    }
+    
+}
+        .glass:hover{
+            scale: 1.04;
+    
+    
+        }
+    .glass p{
+        transition: all 0.15s ease-in-out;
+    }
+    .glass p:hover{
+        position: relative;
+        scale: 1.2;
+
+    }
+#globeViz{
+    position: absolute;
+}    
