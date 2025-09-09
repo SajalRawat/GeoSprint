@@ -44,19 +44,21 @@
     const controls = globe.controls();
     controls.enableZoom = true; // disable scroll zoom
     // Set minimum and maximum zoom distance
-  controls.minDistance = 200;
+
 const desktopQuery = window.matchMedia('(max-width: 455px)');
 
 if (desktopQuery.matches) {
   // Execute JavaScript specific to desktop viewports
 
   controls.maxDistance = 275;  // closest you can get
+  controls.minDistance = 150;
   console.log("Matched Query");
   
 
   }
   else{
     controls.maxDistance = 400;  // closest you can get
+      controls.minDistance = 200;
 
 
   // farthest you can go
