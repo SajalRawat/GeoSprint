@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guess the Country Game</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <link rel="stylesheet" href="game.css" />
+  </head>
+  <body
+    class="bg-gradient-to-r from-slate-900 via-black to-slate-900 text-white overflow-hidden"
+  >
+    <div id="globeViz" class="absolute top-0 left-0 w-full h-full"></div>
+
+    <div
+      id="gamePanel"
+      class="glass absolute bottom-6 left-1/2 transform -translate-x-1/2 sm:left-6 sm:translate-x-0 px-4 sm:px-6 py-4 sm:py-5 w-80 sm:w-64 text-center shadow-xl"
+    >
+      <div class="text-lg">
+        🎯 Find:
+        <span id="countryName" class="font-bold text-cyan-400 animate-pulse"
+          >Loading...</span
+        >
+      </div>
+      <div
+        id="result"
+        class="mt-3 font-semibold min-h-[28px] transition duration-300"
+      ></div>
+      <div class="mt-1 text-sm text-gray-300">
+        Selected: <span id="selectedCountry">None</span>
+      </div>
+      <div class="mt-2 text-sm text-gray-300">
+        Attempts left: <span id="attempts">3</span>
+      </div>
+      <button
+        id="skipBtn"
+        class="btn-modern mt-4 w-full px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-black font-semibold"
+      >
+        ⏩ Skip
+      </button>
+    </div>
+
+    <div
+      id="scorePanel"
+      class="glass absolute top-6 left-1/2 transform -translate-x-1/2 sm:bottom-6 sm:right-6 sm:top-auto sm:left-auto sm:translate-x-0 px-4 sm:px-6 py-4 sm:py-5 w-80 sm:w-64 text-center shadow-xl"
+    >
+      <div class="text-lg font-bold text-green-400">⭐ Score</div>
+      <div id="score" class="text-3xl mt-2 font-extrabold text-cyan-300">0</div>
+      <div class="text-sm text-gray-300 mt-2">Keep guessing to climb up!</div>
+    </div>
+
+    <script src="game.js" defer></script>
+  </body>
+</html>
