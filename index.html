@@ -3,129 +3,225 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Globe Explorer Landing</title>
+  <title>GeoSprint</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+
     body {
       margin: 0;
-      padding: 0;
-      overflow: hidden;
-      font-family: "Poppins", sans-serif;
-      background: black;
-      color: white;
-      text-align: center;
-    }
-
-    .stars {
-      width: 100%;
-      height: 100%;
-      background: black url("https://www.transparenttextures.com/patterns/stardust.png") repeat;
-      position: absolute;
-      z-index: 0;
-      animation: moveStars 120s linear infinite;
-    }
-    @keyframes moveStars {
-      from { background-position: 0 0; }
-      to { background-position: 10000px 5000px; }
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
+      font-family: "Outfit", sans-serif;
+      background: #0d0d0d;
+      color: #fff;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
-      padding: 20px;
+      min-height: 100vh;
+      padding: 40px 20px;
+      box-sizing: border-box;
     }
 
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 20px;
-      background: linear-gradient(45deg, #00ffd5, #ffcc00);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: fadeIn 2s ease forwards;
-    }
-
-    p {
-      font-size: 1.2rem;
-      margin-bottom: 40px;
-      max-width: 600px;
-      color: rgba(255,255,255,0.8);
-      animation: fadeIn 2.5s ease forwards;
-    }
-
-    .options {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .card {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 20px;
-      padding: 30px;
-      width: 250px;
+    /* Hero Section */
+    .hero {
       text-align: center;
-      cursor: pointer;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-      transition: transform 0.4s ease, background 0.4s ease;
-      animation: fadeInUp 1s ease forwards;
+      margin-bottom: 50px;
     }
 
-    .card:hover {
-      transform: translateY(-10px) scale(1.05);
-      background: rgba(255, 255, 255, 0.2);
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
     }
 
-    .card h2 {
-      margin: 0 0 10px;
-      font-size: 1.5rem;
-      color: #ffcc00;
-    }
-
-    .card p {
-      font-size: 1rem;
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
       color: rgba(255,255,255,0.85);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .cta-btn {
+      font-size: 1.1rem;
+      padding: 14px 30px;
+      border: 1px solid #fff;
+      border-radius: 25px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.3s ease, background 0.3s ease;
     }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+    .cta-btn:hover {
+      transform: scale(1.05);
+      background: rgba(255,255,255,0.12);
     }
 
-    /* Mobile adjustments */
-    @media (max-width: 600px) {
-      h1 { font-size: 2rem; }
-      p { font-size: 1rem; }
-      .card { width: 90%; padding: 20px; }
+    /* Tabs */
+    .tabs {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 15px;
+      border: 1px solid rgba(255,255,255,0.1);
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+
+    .tab-buttons {
+      display: flex;
+    }
+
+    .tab-buttons button {
+      flex: 1;
+      padding: 15px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .tab-buttons button.active {
+      background: rgba(255,255,255,0.12);
+    }
+
+    .tab-content {
+      padding: 30px;
+      display: none;
+      text-align: center;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .tab-content h2 {
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+    }
+
+    .tab-content p {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .tab-content a {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 20px;
+      color: #00f0ff;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      text-decoration: none;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .tab-content a:hover {
+      background: rgba(255,255,255,0.12);
+      transform: scale(1.05);
+    }
+
+    /* Contributors Section */
+    .contributors {
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .contributors a {
+      color: #00f0ff;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+
+    .contributors a:hover {
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Responsive */
+    @media (max-width: 500px) {
+      .hero h1 { font-size: 2rem; }
+      .hero p { font-size: 1rem; }
+      .tab-content { padding: 20px; }
+      .tab-content h2 { font-size: 1.3rem; }
+      .tab-content p { font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
-  <div class="stars"></div>
-  <div class="container">
-    <h1>Welcome to Globe Explorer</h1>
-    <p>Choose your adventure — explore countries with live information or jump into an interactive game world.</p>
-    <div class="options">
-      <div class="card" onclick="window.location.href='info.html'">
-        <h2>🌍 Info Globe</h2>
-        <p>Learn about countries with live Wikipedia info.</p>
-      </div>
-      <div class="card" onclick="window.location.href='game.html'">
-        <h2>🎮 Game Globe</h2>
-        <p>Play with the globe in a fun and interactive way.</p>
-      </div>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <h1>GeoSprint</h1>
+    <p>Explore the world your way. Choose a path to learn about countries or play with an interactive globe game.</p>
+    <a class="cta-btn" href="https://github.com/SajalRawat/Project-GlobeGL" target="_blank">Main GitHub Repo</a>
+  </div>
+
+  <!-- Tabs Section -->
+  <div class="tabs">
+    <div class="tab-buttons">
+      <button class="active" onclick="openTab(event, 'info')">🌍 Info Globe</button>
+      <button onclick="openTab(event, 'game')">🎮 Game Globe</button>
+    </div>
+
+    <div id="info" class="tab-content active">
+      <h2>Info Globe</h2>
+      <p>Discover countries with live Wikipedia info and detailed data.</p>
+      <a href="info.html">Go to Info Globe</a>
+    </div>
+
+    <div id="game" class="tab-content">
+      <h2>Game Globe</h2>
+      <p>Dive into a 3D interactive globe game for fun and exploration.</p>
+      <a href="game.html">Go to Game Globe</a>
     </div>
   </div>
+
+  <!-- Contributors -->
+  <div class="contributors">
+    Contributors: 
+    <a href="https://github.com/SajalRawat/Project-GlobeGL" target="_blank">Sajal Rawat</a> | 
+    <a href="https://github.com/jrdevadattan" target="_blank">jrdevadattan</a>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    &copy; 2025 GeoSprint. All rights reserved.
+  </footer>
+
+  <script>
+    function openTab(evt, tabName) {
+      const tabContents = document.querySelectorAll('.tab-content');
+      const tabButtons = document.querySelectorAll('.tab-buttons button');
+
+      tabContents.forEach(tc => tc.classList.remove('active'));
+      tabButtons.forEach(tb => tb.classList.remove('active'));
+
+      document.getElementById(tabName).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+  </script>
+
 </body>
 </html>
