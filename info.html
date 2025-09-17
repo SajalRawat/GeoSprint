@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Globe Explorer</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: black;
+    }
+
+    #globeViz {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 1.2s ease, transform 1.2s ease;
+    }
+    #globeViz.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+    #globeViz.hidden {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    /* Country Info Box */
+    #infoBox {
+      position: fixed;
+      top: 50%;
+      right: 40px;
+      transform: translateY(-50%);
+      width: 340px;
+      max-width: 90%;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding: 20px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: white;
+      font-size: 14px;
+      display: none;
+      z-index: 2;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: fadeInBox 0.8s ease forwards;
+    }
+
+    #infoBox h2 {
+      margin-top: 0;
+      font-size: 20px;
+      color: #ffcc00;
+    }
+
+    #closeBtn {
+      margin-top: 10px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    #closeBtn:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    @keyframes fadeInBox {
+      from { opacity: 0; transform: translateY(-40%) scale(0.9); }
+      to   { opacity: 1; transform: translateY(-50%) scale(1); }
+    }
+
+    /* Starry background */
+    .stars {
+      width: 100%;
+      height: 100%;
+      background: black url("https://www.transparenttextures.com/patterns/stardust.png") repeat;
+      position: absolute;
+      z-index: 0;
+      animation: moveStars 100s linear infinite;
+    }
+    @keyframes moveStars {
+      from { background-position: 0 0; }
+      to { background-position: 10000px 5000px; }
+    }
+
+    /* Tablet & Mobile (bottom panel) */
+    @media (max-width: 768px) {
+      #infoBox {
+        top: auto;
+        bottom: -100%; /* hidden by default */
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 45vh;
+        transform: none;
+        border-radius: 20px 20px 0 0;
+        font-size: 13px;
+        transition: bottom 0.5s ease;
+      }
+      #infoBox.show {
+        bottom: 0; /* slide up */
+      }
+    }
+
+    @media (max-width: 480px) {
+      #infoBox {
+        padding: 15px;
+        font-size: 12px;
+      }
+      #infoBox h2 {
+        font-size: 16px;
+      }
+      #closeBtn {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div id="globeViz"></div>
+
+  <!-- Country Info Popup -->
+  <div id="infoBox">
+    <h2 id="countryName"></h2>
+    <p id="countryInfo">Loading...</p>
+    <button id="closeBtn">Close</button>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/three"></script>
+  <script src="https://unpkg.com/globe.gl"></script>
+
+  <script>
+    const globeEl = document.getElementById("globeViz");
+    const globe = Globe()
+      (globeEl)
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+      .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png');
+
+    const controls = globe.controls();
+    controls.enableZoom = true;
+    controls.maxDistance = 500;
+    controls.minDistance = 200;
+
+    let hoverD = null;
+    const infoBox = document.getElementById("infoBox");
+    const countryNameEl = document.getElementById("countryName");
+    const countryInfoEl = document.getElementById("countryInfo");
+    const closeBtn = document.getElementById("closeBtn");
+
+    // Initial globe animation
+    setTimeout(() => globeEl.classList.add("active"), 300);
+
+    closeBtn.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        infoBox.classList.remove("show");
+        setTimeout(() => { infoBox.style.display = "none"; }, 500);
+      } else {
+        infoBox.style.display = "none";
+      }
+      globeEl.classList.remove("hidden");
+      globeEl.classList.add("active");
+    });
+
+    // Load country data
+    fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
+      .then(res => res.json())
+      .then(countries => {
+        globe
+          .polygonsData(countries.features)
+          .polygonCapColor(d => d === hoverD ? 'rgba(0,200,150,0.6)' : 'rgba(0,200,150,0.4)')
+          .polygonSideColor(d => d === hoverD ? 'rgba(0,100,100,0.5)' : 'rgba(0,100,100,0.2)')
+          .polygonStrokeColor(() => '#111')
+          .onPolygonHover(d => {
+            hoverD = d || null;
+            globe.polygonsData(countries.features);
+          })
+          .onPolygonClick(d => {
+            const countryName = d.properties.name;
+            countryNameEl.textContent = countryName;
+            countryInfoEl.textContent = "Loading...";
+
+            // Rotate & zoom to country centroid
+            if (d && d.geometry && d.geometry.type === "Polygon") {
+              const coords = d.geometry.coordinates[0][0]; 
+              const lng = coords[0], lat = coords[1];
+              globe.pointOfView({ lat, lng, altitude: 1.5 }, 2000);
+            }
+
+            // Fetch summary from Wikipedia API
+            fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(countryName)}`)
+              .then(r => r.json())
+              .then(data => {
+                if (data.extract) {
+                  countryInfoEl.textContent = data.extract;
+                } else {
+                  countryInfoEl.textContent = "No information available.";
+                }
+              })
+              .catch(() => {
+                countryInfoEl.textContent = "Error loading information.";
+              });
+
+            // Animate globe out & show info box
+            setTimeout(() => {
+              globeEl.classList.remove("active");
+              globeEl.classList.add("hidden");
+              infoBox.style.display = "block";
+              if (window.innerWidth <= 768) {
+                setTimeout(() => infoBox.classList.add("show"), 50);
+              }
+            }, 1800);
+          });
+      });
+  </script>
+</body>
+</html>
