@@ -13,7 +13,6 @@ controls.minDistance = 200;
 controls.maxDistance = 400;
 controls.enablePan = false;
 
-// Audio elements
 const audioLoop = new Audio('assets/loop.mp3');
 audioLoop.loop = true;
 audioLoop.volume = 0.3;
@@ -29,7 +28,7 @@ let score = 0, attemptsLeft = 3;
 
 function setCookie(name, value, days) {
   const d = new Date();
-  d.setTime(d.getTime() + (days*24*60*60*1000));
+  d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
   document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
 }
 
@@ -64,7 +63,13 @@ fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/wor
       .onPolygonClick(handleClick);
 
     if (!/Mobi|Android/i.test(navigator.userAgent)) {
-      globe.onPolygonHover(d => { hoveredCountry = d || null; globe.polygonsData(countriesData); });
+      globe.onPolygonHover(d => {
+        hoveredCountry = d || null;
+        globe.polygonsData(countriesData);
+      });
+    } else {
+      hoveredCountry = null;
+      globe.onPolygonHover(null);
     }
 
     pickRandomCountry();
@@ -72,7 +77,9 @@ fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/wor
 
 function pickRandomCountry() {
   targetCountry = countriesData[Math.floor(Math.random() * countriesData.length)];
-  selectedCountry = null; hoveredCountry = null; attemptsLeft = 3;
+  selectedCountry = null;
+  hoveredCountry = null;
+  attemptsLeft = 3;
   document.getElementById("countryName").textContent = targetCountry.properties.name;
   document.getElementById("result").textContent = "";
   document.getElementById("selectedCountry").textContent = "None";
@@ -81,22 +88,32 @@ function pickRandomCountry() {
 }
 
 function handleClick(country) {
-  if (attemptsLeft <= 0) return;  // prevent clicks if no attempts left
+  if (attemptsLeft <= 0) return;
 
   selectedCountry = country;
   document.getElementById("selectedCountry").textContent = country.properties.name;
   attemptsLeft--;
 
   if (country.properties.name === targetCountry.properties.name) {
-    document.getElementById("result").textContent = `✅ Correct! ${targetCountry.properties.name}`;
-    document.getElementById("result").className = "mt-2 font-semibold text-green-400 animate-bounce";
+    const resultDiv = document.getElementById("result");
+    resultDiv.textContent = `✅ Correct! ${targetCountry.properties.name}`;
+    resultDiv.className = "mt-2 font-semibold text-green-400 animate-bounce";
+
     score++;
     document.getElementById("score").textContent = score;
     setCookie("gameScore", score, 30);
     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
     audioCorrect.play();
     controls.rotateSpeed = 5;
-    setTimeout(() => { controls.rotateSpeed = 0.9; pickRandomCountry(); }, 2000);
+
+    requestAnimationFrame(() => {
+      globe.polygonsData(countriesData);
+    });
+
+    setTimeout(() => {
+      controls.rotateSpeed = 0.9;
+      pickRandomCountry();
+    }, 2000);
   } else if (attemptsLeft > 0) {
     document.getElementById("result").textContent = "❌ Wrong! Try again.";
     document.getElementById("result").className = "mt-2 font-semibold text-red-400";
@@ -125,10 +142,13 @@ function revealCountry() {
   globe.polygonsData(countriesData);
 
   let coords = targetCountry.geometry.coordinates.flat(3);
-  let lat = coords.filter((_, i) => i % 2 === 1).reduce((a,b)=>a+b,0)/(coords.length/2);
-  let lng = coords.filter((_, i) => i % 2 === 0).reduce((a,b)=>a+b,0)/(coords.length/2);
+  let lat = coords.filter((_, i) => i % 2 === 1).reduce((a, b) => a + b, 0) / (coords.length / 2);
+  let lng = coords.filter((_, i) => i % 2 === 0).reduce((a, b) => a + b, 0) / (coords.length / 2);
 
   globe.pointOfView({ lat, lng, altitude: 1.5 }, 2000);
 
-  setTimeout(() => { selectedCountry = null; pickRandomCountry(); }, 3000);
+  setTimeout(() => {
+    selectedCountry = null;
+    pickRandomCountry();
+  }, 3000);
 }
