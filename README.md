@@ -21,8 +21,8 @@ GeoSprint is an interactive 3D globe project that provides a geography quiz game
 
 1. Clone the repository and open the GeoSprint folder:
    ```powershell
-   git clone https://github.com/SajalRawat/Project-GlobeGL.git
-   cd Project-GlobeGL/GeoSprint
+   git clone https://github.com/SajalRawat/GeoSprint.git
+   cd GeoSprint
    ```
 
 2. Start a local HTTP server (recommended because browsers may block certain requests when using file://):
