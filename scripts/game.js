@@ -16,19 +16,45 @@ controls.enablePan = false;
 let countriesData = [], targetCountry = null, hoveredCountry = null, selectedCountry = null;
 let score = 0, attemptsLeft = 3;
 
+function setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days*24*60*60*1000));
+  document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+}
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+const savedScore = getCookie("gameScore");
+if (savedScore) {
+  score = parseInt(savedScore);
+  document.getElementById("score").textContent = score;
+}
+
 fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
   .then(res => res.json())
   .then(data => {
     countriesData = data.features;
     globe.polygonsData(countriesData)
-      .polygonCapColor(d => d === selectedCountry && d === targetCountry ? 'rgba(34,255,0,0.9)' :
-                          d === selectedCountry && d !== targetCountry ? 'rgba(255,0,0,0.8)' :
-                          d === hoveredCountry ? 'rgba(255,215,0,0.9)' : 'rgba(0,200,150,0.35)')
+      .polygonCapColor(d =>
+        d === selectedCountry && d === targetCountry ? 'rgba(34,255,0,0.9)' :
+        d === selectedCountry && d !== targetCountry ? 'rgba(255,0,0,0.8)' :
+        d === hoveredCountry ? 'rgba(255,215,0,0.9)' : 'rgba(0,200,150,0.35)'
+      )
       .polygonSideColor(() => 'rgba(0,100,100,0.25)')
       .polygonStrokeColor(() => '#222')
-      .polygonAltitude(d => d === hoveredCountry || d === selectedCountry ? 0.06 : 0.012)
-      .onPolygonClick(handleClick)
-      .onPolygonHover(d => { hoveredCountry = d || null; globe.polygonsData(countriesData); });
+      .polygonAltitude(d =>
+        d === hoveredCountry || d === selectedCountry ? 0.06 : 0.012
+      )
+      .onPolygonClick(handleClick);
+
+    if (!/Mobi|Android/i.test(navigator.userAgent)) {
+      globe.onPolygonHover(d => { hoveredCountry = d || null; globe.polygonsData(countriesData); });
+    }
 
     pickRandomCountry();
   });
@@ -53,8 +79,8 @@ function handleClick(country) {
     document.getElementById("result").className = "mt-2 font-semibold text-green-400 animate-bounce";
     score++;
     document.getElementById("score").textContent = score;
+    setCookie("gameScore", score, 30);
     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
-
     controls.rotateSpeed = 5;
     setTimeout(() => { controls.rotateSpeed = 0.9; pickRandomCountry(); }, 2000);
   } else if (attemptsLeft > 0) {
