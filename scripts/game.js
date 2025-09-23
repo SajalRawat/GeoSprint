@@ -13,6 +13,17 @@ controls.minDistance = 200;
 controls.maxDistance = 400;
 controls.enablePan = false;
 
+// Audio elements
+const audioLoop = new Audio('assets/loop.mp3');
+audioLoop.loop = true;
+audioLoop.volume = 0.3;
+audioLoop.play();
+
+const audioCorrect = new Audio('assets/correct.wav');
+const audioFail = new Audio('assets/fail.wav');
+const audioWrong = new Audio('assets/wrong.wav');
+const audioSkip = new Audio('assets/skip.mp3');
+
 let countriesData = [], targetCountry = null, hoveredCountry = null, selectedCountry = null;
 let score = 0, attemptsLeft = 3;
 
@@ -70,6 +81,8 @@ function pickRandomCountry() {
 }
 
 function handleClick(country) {
+  if (attemptsLeft <= 0) return;  // prevent clicks if no attempts left
+
   selectedCountry = country;
   document.getElementById("selectedCountry").textContent = country.properties.name;
   attemptsLeft--;
@@ -81,19 +94,26 @@ function handleClick(country) {
     document.getElementById("score").textContent = score;
     setCookie("gameScore", score, 30);
     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+    audioCorrect.play();
     controls.rotateSpeed = 5;
     setTimeout(() => { controls.rotateSpeed = 0.9; pickRandomCountry(); }, 2000);
   } else if (attemptsLeft > 0) {
     document.getElementById("result").textContent = "❌ Wrong! Try again.";
     document.getElementById("result").className = "mt-2 font-semibold text-red-400";
     document.getElementById("attempts").textContent = attemptsLeft;
+    audioFail.play();
     globe.polygonsData(countriesData);
   } else {
+    audioWrong.play();
     revealCountry();
   }
 }
 
-function skipCountry() { revealCountry(); }
+function skipCountry() {
+  audioSkip.play();
+  revealCountry();
+}
+
 document.getElementById("skipBtn").addEventListener("click", skipCountry);
 
 function revealCountry() {
