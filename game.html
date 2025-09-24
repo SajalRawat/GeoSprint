@@ -1,59 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Game Globe</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GeoSprint - Globe Game</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-    <link rel="stylesheet" href="./styles/game.css" />
-  </head>
-  <body
-    class="bg-gradient-to-r from-slate-900 via-black to-slate-900 text-white overflow-hidden"
-  >
-    <div id="globeViz" class="absolute top-0 left-0 w-full h-full"></div>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-database-compat.js"></script>
 
-    <div
-      id="gamePanel"
-      class="glass absolute bottom-6 left-1/2 transform -translate-x-1/2 sm:left-6 sm:translate-x-0 px-4 sm:px-6 py-4 sm:py-5 w-80 sm:w-64 text-center shadow-xl"
-    >
+  <link rel="stylesheet" href="./styles/game.css" />
+</head>
+<body class="bg-gradient-to-r from-slate-900 via-black to-slate-900 text-white overflow-hidden">
+  <div id="globeViz" class="absolute top-0 left-0 w-full h-full"></div>
+
+  <div id="mainMenu" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60">
+    <div class="glass text-center p-8 w-80">
+      <h1 class="text-3xl font-bold mb-6 text-cyan-300">GeoSprint</h1>
+      <button id="soloBtn" class="btn-modern w-full mb-4 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-black font-semibold">
+        👤 Play Solo
+      </button>
+      <button id="multiplayerBtn" class="btn-modern w-full px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-black font-semibold">
+        👥 Play Against Another
+      </button>
+    </div>
+  </div>
+
+  <div id="multiplayerMenu" class="hidden absolute inset-0 flex items-center justify-center bg-black bg-opacity-60">
+    <div class="glass text-center p-8 w-80">
+      <button id="createRoomBtn" class="btn-modern w-full mb-4 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-black font-semibold">
+        Create Room
+      </button>
+      <button id="joinRoomBtn" class="btn-modern w-full px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-semibold">
+        Join Room
+      </button>
+       <button id="backToMainBtn" class="mt-4 text-sm text-gray-300 hover:text-white">Back</button>
+    </div>
+  </div>
+
+  <div id="roomLobby" class="hidden absolute inset-0 flex items-center justify-center bg-black bg-opacity-60">
+      <div id="createRoomView" class="hidden glass text-center p-8 w-96">
+          <h2 class="text-lg mb-2 text-gray-300">Share this code with your friend:</h2>
+          <div id="roomCodeDisplay" class="text-4xl font-mono tracking-widest bg-slate-800 text-cyan-300 p-3 rounded-lg mb-4">...</div>
+          <p id="waitingStatus" class="animate-pulse">Waiting for another player to join...</p>
+      </div>
+       <div id="joinRoomView" class="hidden glass text-center p-8 w-96">
+            <h2 class="text-lg mb-3 text-gray-300">Enter the Room Code:</h2>
+            <input type="text" id="roomCodeInput" class="w-full bg-slate-800 text-cyan-300 p-3 rounded-lg text-2xl font-mono tracking-widest text-center uppercase" maxlength="5">
+            <button id="submitJoinBtn" class="btn-modern mt-4 w-full px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-black font-semibold">Join Game</button>
+            <p id="joinError" class="text-red-400 mt-2 h-5"></p>
+       </div>
+  </div>
+
+
+  <div id="gameUI" class="hidden">
+    <div id="gamePanel" class="glass absolute bottom-6 left-1/2 transform -translate-x-1/2 sm:left-6 sm:translate-x-0 px-4 sm:px-6 py-4 sm:py-5 w-80 sm:w-64 text-center shadow-xl">
       <div class="text-lg">
         🎯 Find:
-        <span id="countryName" class="font-bold text-cyan-400 animate-pulse"
-          >Loading...</span
-        >
+        <span id="countryName" class="font-bold text-cyan-400 animate-pulse">Loading...</span>
       </div>
-      <div
-        id="result"
-        class="mt-3 font-semibold min-h-[28px] transition duration-300"
-      ></div>
+      <div id="result" class="mt-3 font-semibold min-h-[28px] transition duration-300"></div>
       <div class="mt-1 text-sm text-gray-300">
         Selected: <span id="selectedCountry">None</span>
       </div>
-      <div class="mt-2 text-sm text-gray-300">
+      <div id="attemptsContainer" class="mt-2 text-sm text-gray-300">
         Attempts left: <span id="attempts">3</span>
       </div>
-      <button
-        id="skipBtn"
-        class="btn-modern mt-4 w-full px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-black font-semibold"
-      >
+      <button id="skipBtn" class="btn-modern mt-4 w-full px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-black font-semibold">
         ⏩ Skip
       </button>
     </div>
 
-    <div
-      id="scorePanel"
-      class="glass absolute top-6 left-1/2 transform -translate-x-1/2 sm:bottom-6 sm:right-6 sm:top-auto sm:left-auto sm:translate-x-0 px-4 sm:px-6 py-4 sm:py-5 w-80 sm:w-64 text-center shadow-xl"
-    >
-      <div class="text-lg font-bold text-green-400">⭐ Score</div>
-      <div id="score" class="text-3xl mt-2 font-extrabold text-cyan-300">0</div>
-      <div class="text-sm text-gray-300 mt-2">Keep guessing to climb up!</div>
-    </div>
+    <div id="scorePanel" class="glass absolute top-6 left-1/2 transform -translate-x-1/2 sm:bottom-6 sm:right-6 sm:top-auto sm:left-auto sm:translate-x-0 px-4 sm:px-6 py-4 sm:py-5 w-80 sm:w-64 text-center shadow-xl">
+        </div>
+  </div>
 
-    <script src="./scripts/game.js" defer></script>
-  </body>
+  <script src="./scripts/game.js" defer></script>
+</body>
 </html>
