@@ -15,6 +15,7 @@ GeoSprint is an interactive 3D globe project that provides a geography quiz game
 - Three.js
 - Globe.gl
 - canvas-confetti
+- Tailwind CSS
 - Plain HTML, CSS, JavaScript
 
 ## How to run (Windows)
