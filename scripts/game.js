@@ -32,6 +32,9 @@ let countriesData = [], targetCountry = null, hoveredCountry = null, selectedCou
 let score = 0, attemptsLeft = 3;
 let playerId = null, roomId = null, playerNum = null, roomRef = null;
 
+// NEW: per-round answered lock (local)
+let roundAnswered = false;
+
 // GLOBE & AUDIO SETUP
 const globe = Globe()(document.getElementById('globeViz'))
   .globeImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg')
@@ -44,8 +47,8 @@ controls.enableRotate = true;
 controls.rotateSpeed = 0.9;
 controls.enableZoom = true;
 controls.zoomSpeed = 0.5;
-controls.minDistance = 200;
-controls.maxDistance = 400;
+controls.minDistance = 145;
+controls.maxDistance = 500;
 controls.enablePan = false;
 
 const audioLoop = new Audio('assets/loop.mp3');
@@ -115,7 +118,9 @@ function createRoom() {
         gameState: {
             status: 'waiting',
             targetCountryName: null,
-            round: 0
+            round: 0,
+            // NEW: answered flag in Firebase so all clients can see if round is already claimed
+            answered: false
         }
     };
 
@@ -156,6 +161,9 @@ function listenToRoomChanges() {
     roomRef.on('value', snapshot => {
         const roomData = snapshot.val();
         if (!roomData) return;
+
+        // KEEP local roundAnswered synced with Firebase
+        roundAnswered = !!(roomData.gameState && roomData.gameState.answered);
 
         if (playerNum === 1 && roomData.gameState.status === 'playing' && roomData.gameState.round === 0) {
             startGame();
@@ -252,8 +260,12 @@ function pickRandomCountry() {
         targetCountry = randomCountry;
         resetForNewRound();
     } else if (gameMode === 'multiplayer' && playerNum === 1) {
+        // Player 1 decides the new target; also reset the shared 'answered' flag so clients know round is fresh
+        targetCountry = randomCountry; // set local immediately for smoother UI for owner
         roomRef.child('gameState/targetCountryName').set(randomCountry.properties.name);
         roomRef.child('gameState/round').transaction(round => (round || 0) + 1);
+        // reset answered flag in firebase for the new round
+        roomRef.child('gameState/answered').set(false);
     }
 }
 
@@ -261,6 +273,8 @@ function resetForNewRound() {
     selectedCountry = null;
     hoveredCountry = null;
     attemptsLeft = 3;
+    // reset local answered flag
+    roundAnswered = false;
     document.getElementById("countryName").textContent = targetCountry.properties.name;
     document.getElementById("result").textContent = "";
     document.getElementById("selectedCountry").textContent = "None";
@@ -270,7 +284,8 @@ function resetForNewRound() {
 }
 
 function handleClick(country) {
-    if (attemptsLeft <= 0) return;
+    // NEW: ignore clicks if out of attempts or if round already answered (prevents multi-tap exploitation)
+    if (attemptsLeft <= 0 || roundAnswered) return;
 
     selectedCountry = country;
     document.getElementById("selectedCountry").textContent = country.properties.name;
@@ -294,23 +309,55 @@ function handleCorrectGuess() {
     audioCorrect.play();
     controls.rotateSpeed = 5;
     
+    // mark round locally answered immediately to avoid duplicate UI scoring
+    roundAnswered = true;
+
     if (gameMode === 'solo') {
         score++;
         updateSoloScorePanel();
         setCookie("gameScore", score, 30);
-    } else {
-        roomRef.child(`players/p${playerNum}/score`).transaction(currentScore => (currentScore || 0) + 1);
-    }
-    
-    globe.polygonsData(countriesData);
+        globe.polygonsData(countriesData);
 
-    const delay = gameMode === 'multiplayer' ? 3000 : 2000;
-    setTimeout(() => {
-        controls.rotateSpeed = 0.9;
-        if (gameMode === 'solo' || (gameMode === 'multiplayer' && playerNum === 1)) {
+        const delay = 2000;
+        setTimeout(() => {
+            controls.rotateSpeed = 0.9;
             pickRandomCountry();
-        }
-    }, delay);
+        }, delay);
+
+    } else {
+        // MULTIPLAYER:
+        // Use a firebase transaction on gameState/answered to ensure only the first client to flip it
+        // gets to increment its player's score. This avoids race where two taps happen almost-simultaneously.
+        const answeredRef = roomRef.child('gameState/answered');
+        answeredRef.transaction(current => {
+            // if already true, abort (return undefined leaves it unchanged and 'committed' false)
+            if (current) return; 
+            return true;
+        }, (err, committed, snapshot) => {
+            if (err) {
+                console.error("Answered transaction error:", err);
+                // fallback: do not award (prevents dupes)
+                return;
+            }
+            if (!committed) {
+                // someone else already claimed the round; do nothing
+                return;
+            }
+            // We are the first to claim the round -> award the score atomically
+            roomRef.child(`players/p${playerNum}/score`).transaction(currentScore => (currentScore || 0) + 1);
+            globe.polygonsData(countriesData);
+
+            // let everyone see the result locally before picking next
+            const delay = 3000;
+            setTimeout(() => {
+                controls.rotateSpeed = 0.9;
+                // Only player 1 should pick the next country in multiplayer (keeps sync)
+                if (playerNum === 1) {
+                    pickRandomCountry();
+                }
+            }, delay);
+        });
+    }
 }
 
 
@@ -337,6 +384,9 @@ function revealCountry() {
     resultDiv.textContent = `⏩ The correct country was ${targetCountry.properties.name}`;
     resultDiv.className = "mt-2 font-semibold text-yellow-400";
 
+    // claim round locally (prevents further clicks)
+    roundAnswered = true;
+
     selectedCountry = targetCountry;
     globe.polygonsData(countriesData);
     
@@ -345,6 +395,10 @@ function revealCountry() {
     let lng = coords.filter((_, i) => i % 2 === 0).reduce((a, b) => a + b, 0) / (coords.length / 2);
     globe.pointOfView({ lat, lng, altitude: 1.5 }, 2000);
 
+    // If multiplayer, mark answered = true so nobody else can score this round
+    if (gameMode === 'multiplayer') {
+        roomRef.child('gameState/answered').set(true);
+    }
 
     setTimeout(() => {
         if (gameMode === 'solo' || (gameMode === 'multiplayer' && playerNum === 1)) {
